@@ -9,9 +9,23 @@ export interface AttendanceData {
   allowedUntil60: number;
 }
 
+export interface ProfileData {
+  name: string;
+  enrollmentNo: string;
+  rollNo: string;
+  scholarNo: string;
+  branch: string;
+  semester: string;
+  dob: string;
+  gender: string;
+  email: string;
+  mobile: string;
+}
+
 export interface AttendanceResponse {
   ok: boolean;
   data?: AttendanceData;
+  profile?: ProfileData;
   error?: string;
 }
 
@@ -25,6 +39,8 @@ export async function fetchRealAttendance(
       password,
     });
 
+    console.log('Full API response:', response.data);
+
     if (response.data.ok && response.data.summary) {
       // Parse the backend response and convert to AttendanceData format
       const { total_classes, present, percentage } = response.data.summary;
@@ -35,11 +51,11 @@ export async function fetchRealAttendance(
       const attendancePercentage = parseFloat(percentage.replace(/[^\d.]/g, '')) || 0;
       const absentClasses = totalClasses - presentClasses;
       
-      // Calculate required classes for 75%
-      const requiredFor75 = Math.max(0, Math.ceil((0.75 * totalClasses - presentClasses) / 0.25));
+      // Calculate required classes for 60%
+      const requiredFor75 = Math.max(0, Math.ceil((0.60 * totalClasses - presentClasses) / 0.40));
       
-      // Calculate how many classes can be missed to stay above 60%
-      const allowedUntil60 = Math.max(0, Math.floor((presentClasses - 0.6 * totalClasses) / 0.6));
+      // Calculate how many classes can be missed to stay above 50%
+      const allowedUntil60 = Math.max(0, Math.floor((presentClasses - 0.5 * totalClasses) / 0.5));
 
       return {
         ok: true,
@@ -51,6 +67,7 @@ export async function fetchRealAttendance(
           requiredFor75,
           allowedUntil60,
         },
+        profile: response.data.profile || undefined,
       };
     } else {
       return {

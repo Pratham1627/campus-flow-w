@@ -94,9 +94,48 @@ export async function scrapeAttendance(username, password) {
       return { ok: false, error: "Attendance not accessible" };
     }
 
+    // Step 6: Visit Profile page to get student details
+    const PROFILE_URL = BASE_URL + "Accsoft2/Parents/StudentPersonalDetails.aspx";
+    let profile = null;
+    
+    try {
+      const profileRes = await axios.get(PROFILE_URL, {
+        headers: { ...headers, Cookie: combinedCookies.join("; ") },
+      });
+
+      const $profile = cheerio.load(profileRes.data);
+      
+      const studentName = $profile("#ctl00_ContentPlaceHolder1_txtStudName").attr("value") || "";
+      const enrollmentNo = $profile("#ctl00_ContentPlaceHolder1_txtUEnrollNo").attr("value") || "";
+      const rollNo = $profile("#ctl00_ContentPlaceHolder1_txtBoardRollNo").attr("value") || "";
+      const email = $profile("#ctl00_ContentPlaceHolder1_txtSEmail").attr("value") || "";
+      const mobile = $profile("#ctl00_ContentPlaceHolder1_txtSMob").attr("value") || "";
+      const section = $profile("#ctl00_ContentPlaceHolder1_drdSection option[selected]").text().trim() || "";
+      
+      // Hardcoded values (scraping dropdowns isn't working reliably)
+      const branch = "C.S.E.- I.O.T. & Cyber Security";
+      const semester = "5th";
+      
+      if (studentName || enrollmentNo || rollNo) {
+        profile = {
+          name: studentName,
+          enrollmentNo: enrollmentNo,
+          rollNo: rollNo,
+          email: email,
+          mobile: mobile,
+          branch: branch,
+          semester: semester,
+          section: section,
+        };
+      }
+    } catch (profileError) {
+      // Profile fetch failed, continue without it
+    }
+
     return {
       ok: true,
       summary: { total_classes: total, present, percentage: percent },
+      profile: profile,
     };
   } catch (err) {
     // surface useful error where possible

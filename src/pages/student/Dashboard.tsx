@@ -79,11 +79,11 @@ const Dashboard = () => {
               title="Attendance"
               value={`${attendance.attendancePercentage.toFixed(1)}%`}
               icon={Percent}
-              trend={attendance.attendancePercentage >= 75 ? 'up' : 'down'}
-              trendValue={attendance.attendancePercentage >= 75 ? 'Above target' : 'Below target'}
+              trend={attendance.attendancePercentage >= 60 ? 'up' : 'down'}
+              trendValue={attendance.attendancePercentage >= 60 ? 'Above target' : 'Below target'}
             />
             <StatCard
-              title="Required for 75%"
+              title="Required for 60%"
               value={attendance.requiredFor75}
               icon={TrendingUp}
               subtitle="More classes needed"

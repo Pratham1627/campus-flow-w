@@ -1,18 +1,17 @@
-// api/attendance.js - Vercel Serverless Function
+// api/profile.js - Vercel Serverless Function
 import axios from "axios";
 import * as cheerio from "cheerio";
 
 /**
- * scrapeAttendance(username, password)
- * - returns { ok: true, summary: { total_classes, present, percentage }, profile: {...} }
+ * scrapeProfile(username, password)
+ * - returns { ok: true, profile: { name, enrollmentNo, rollNo, ... } }
  * - or { ok: false, error: "..." }
  */
-async function scrapeAttendance(username, password) {
+async function scrapeProfile(username, password) {
   const BASE_URL = "https://portal.lnct.ac.in/";
   const LOGIN_URL = BASE_URL + "Accsoft2/StudentLogin.aspx";
   const PARENT_URL = BASE_URL + "Accsoft2/Parents/ParentDesk1.aspx";
-  const ATTENDANCE_URL =
-    BASE_URL + "Accsoft2/Parents/StuAttendanceStatus.aspx";
+  const PROFILE_URL = BASE_URL + "Accsoft2/Parents/StudentPersonalDetails.aspx";
 
   const headers = {
     "User-Agent":
@@ -74,68 +73,53 @@ async function scrapeAttendance(username, password) {
       headers: { ...headers, Cookie: combinedCookies.join("; ") },
     });
 
-    // Step 5: Visit Attendance page
-    const attRes = await axios.get(ATTENDANCE_URL, {
+    // Step 5: Visit Profile page
+    const profileRes = await axios.get(PROFILE_URL, {
       headers: { ...headers, Cookie: combinedCookies.join("; ") },
     });
 
-    const $$ = cheerio.load(attRes.data);
-    const total = $$("#ctl00_ctl00_ContentPlaceHolder1_cp2_lbltotperiod111")
-      .text()
-      .trim();
-    const present = $$("#ctl00_ctl00_ContentPlaceHolder1_cp2_lbltotalp11")
-      .text()
-      .trim();
-    const percent = $$("#ctl00_ctl00_ContentPlaceHolder1_cp2_lblPer119")
-      .text()
-      .trim();
-
-    if (!total && !present && !percent) {
-      return { ok: false, error: "Attendance not accessible" };
-    }
-
-    // Step 6: Visit Profile page to get student details
-    const PROFILE_URL = BASE_URL + "Accsoft2/Parents/StudentPersonalDetails.aspx";
-    let profile = null;
+    const $$ = cheerio.load(profileRes.data);
     
-    try {
-      const profileRes = await axios.get(PROFILE_URL, {
-        headers: { ...headers, Cookie: combinedCookies.join("; ") },
-      });
+    // Extract profile information using the IDs from your HTML file
+    const studentName = $$("#ctl00_ContentPlaceHolder1_txtStudName").attr("value") || "";
+    const enrollmentNo = $$("#ctl00_ContentPlaceHolder1_txtUEnrollNo").attr("value") || "";
+    const rollNo = $$("#ctl00_ContentPlaceHolder1_txtBoardRollNo").attr("value") || "";
+    const scholarNo = $$("#ctl00_ContentPlaceHolder1_txtEnrollNo").attr("value") || "";
+    const dob = $$("#ctl00_ContentPlaceHolder1_txtDOB").attr("value") || "";
+    const gender = $$("#ctl00_ContentPlaceHolder1_drdGender").find("option[selected]").attr("value") || "";
+    const email = $$("#ctl00_ContentPlaceHolder1_txtSEmail").attr("value") || "";
+    const mobile = $$("#ctl00_ContentPlaceHolder1_txtSMob").attr("value") || "";
+    const section = $$("#ctl00_ContentPlaceHolder1_drdSection").find("option[selected]").text().trim() || "";
+    
+    // Additional fields from the HTML
+    const fatherName = $$("#ctl00_ContentPlaceHolder1_txtFName").attr("value") || "";
+    const motherName = $$("#ctl00_ContentPlaceHolder1_txtMName").attr("value") || "";
+    const address = $$("#ctl00_ContentPlaceHolder1_txtPAddress").val() || "";
+    const city = $$("#ctl00_ContentPlaceHolder1_txtPCity").attr("value") || "";
+    const pinCode = $$("#ctl00_ContentPlaceHolder1_txtPPin").attr("value") || "";
 
-      const $profile = cheerio.load(profileRes.data);
-      
-      const studentName = $profile("#ctl00_ContentPlaceHolder1_txtStudName").attr("value") || "";
-      const enrollmentNo = $profile("#ctl00_ContentPlaceHolder1_txtUEnrollNo").attr("value") || "";
-      const rollNo = $profile("#ctl00_ContentPlaceHolder1_txtBoardRollNo").attr("value") || "";
-      const email = $profile("#ctl00_ContentPlaceHolder1_txtSEmail").attr("value") || "";
-      const mobile = $profile("#ctl00_ContentPlaceHolder1_txtSMob").attr("value") || "";
-      const section = $profile("#ctl00_ContentPlaceHolder1_drdSection option[selected]").text().trim() || "";
-      
-      // Hardcoded values (scraping dropdowns isn't working reliably)
-      const branch = "C.S.E.- I.O.T. & Cyber Security";
-      const semester = "5th";
-      
-      if (studentName || enrollmentNo || rollNo) {
-        profile = {
-          name: studentName,
-          enrollmentNo: enrollmentNo,
-          rollNo: rollNo,
-          email: email,
-          mobile: mobile,
-          branch: branch,
-          semester: semester,
-          section: section,
-        };
-      }
-    } catch (profileError) {
-      // Profile fetch failed, continue without it
+    if (!studentName && !enrollmentNo && !rollNo) {
+      return { ok: false, error: "Profile not accessible" };
     }
 
     return {
       ok: true,
-      summary: { total_classes: total, present, percentage: percent },
-      profile: profile,
+      profile: {
+        name: studentName,
+        enrollmentNo: enrollmentNo,
+        rollNo: rollNo,
+        scholarNo: scholarNo,
+        dob: dob,
+        gender: gender,
+        email: email,
+        mobile: mobile,
+        section: section,
+        fatherName: fatherName,
+        motherName: motherName,
+        address: address,
+        city: city,
+        pinCode: pinCode,
+      },
     };
   } catch (err) {
     // surface useful error where possible
@@ -173,7 +157,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const result = await scrapeAttendance(username, password);
+    const result = await scrapeProfile(username, password);
     return res.status(200).json(result);
   } catch (err) {
     return res.status(500).json({ ok: false, error: "Server error" });

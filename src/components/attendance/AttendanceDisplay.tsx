@@ -30,20 +30,20 @@ const AttendanceDisplay = ({ summary, onFetchAgain, onLogout, loading }: Attenda
 
   // Determine color based on percentage
   const getColorClass = () => {
-    if (percentage >= 75) return 'text-green-600';
-    if (percentage >= 60) return 'text-yellow-600';
+    if (percentage >= 60) return 'text-green-600';
+    if (percentage >= 50) return 'text-yellow-600';
     return 'text-red-600';
   };
 
   const getProgressColor = () => {
-    if (percentage >= 75) return 'bg-green-600';
-    if (percentage >= 60) return 'bg-yellow-600';
+    if (percentage >= 60) return 'bg-green-600';
+    if (percentage >= 50) return 'bg-yellow-600';
     return 'bg-red-600';
   };
 
   const getStatusMessage = () => {
-    if (percentage >= 75) return 'Excellent! Keep it up! 🎉';
-    if (percentage >= 60) return 'Good, but try to improve 📚';
+    if (percentage >= 60) return 'Excellent! Keep it up! 🎉';
+    if (percentage >= 50) return 'Good, but try to improve 📚';
     return 'Warning: Below minimum requirement ⚠️';
   };
 
@@ -144,8 +144,8 @@ const AttendanceDisplay = ({ summary, onFetchAgain, onLogout, loading }: Attenda
             </div>
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>0%</span>
-              <span className="text-red-600">60%</span>
-              <span className="text-green-600">75%</span>
+              <span className="text-red-600">50%</span>
+              <span className="text-green-600">60%</span>
               <span>100%</span>
             </div>
           </div>
@@ -165,18 +165,18 @@ const AttendanceDisplay = ({ summary, onFetchAgain, onLogout, loading }: Attenda
             </div>
           </div>
 
-          {percentage < 75 && (
+          {percentage < 60 && (
             <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
               <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                💡 Tip: You need to maintain at least 75% attendance to meet the minimum requirement.
+                💡 Tip: You need to maintain at least 60% attendance to meet the minimum requirement.
               </p>
             </div>
           )}
 
-          {percentage < 60 && (
+          {percentage < 50 && (
             <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
               <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                ⚠️ Warning: Your attendance is below 60%. This may affect your eligibility for exams.
+                ⚠️ Warning: Your attendance is below 50%. This may affect your eligibility for exams.
               </p>
             </div>
           )}

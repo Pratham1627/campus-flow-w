@@ -5,11 +5,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, Calendar, BookOpen, GraduationCap } from 'lucide-react';
-import { attendanceData } from '@/utils/dummyData';
+import { useAttendance } from '@/hooks/useAttendance';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Profile = () => {
   const { user } = useAuth();
+  const { attendance, loading } = useAttendance();
 
   const initials = user?.name
     .split(' ')
@@ -89,7 +91,7 @@ const Profile = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="batch">Batch</Label>
-                <Input id="batch" value="2021-2025" disabled />
+                <Input id="batch" value="25-26" disabled />
               </div>
             </div>
 
@@ -99,50 +101,44 @@ const Profile = () => {
                 Attendance Overview
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 rounded-lg bg-accent/50">
-                  <p className="text-sm text-muted-foreground mb-1">Total Classes</p>
-                  <p className="text-2xl font-bold">{attendanceData.totalClasses}</p>
+              {loading ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
+                  </div>
                 </div>
-                <div className="p-4 rounded-lg bg-accent/50">
-                  <p className="text-sm text-muted-foreground mb-1">Present</p>
-                  <p className="text-2xl font-bold text-primary">{attendanceData.presentClasses}</p>
-                </div>
-                <div className="p-4 rounded-lg bg-accent/50">
-                  <p className="text-sm text-muted-foreground mb-1">Absent</p>
-                  <p className="text-2xl font-bold text-destructive">{attendanceData.absentClasses}</p>
-                </div>
-              </div>
+              ) : attendance ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 rounded-lg bg-accent/50">
+                      <p className="text-sm text-muted-foreground mb-1">Total Classes</p>
+                      <p className="text-2xl font-bold">{attendance.totalClasses}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-accent/50">
+                      <p className="text-sm text-muted-foreground mb-1">Present</p>
+                      <p className="text-2xl font-bold text-primary">{attendance.presentClasses}</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-accent/50">
+                      <p className="text-sm text-muted-foreground mb-1">Absent</p>
+                      <p className="text-2xl font-bold text-destructive">{attendance.absentClasses}</p>
+                    </div>
+                  </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Overall Attendance</span>
-                  <span className="font-semibold text-primary">
-                    {attendanceData.attendancePercentage.toFixed(1)}%
-                  </span>
-                </div>
-                <Progress value={attendanceData.attendancePercentage} className="h-3" />
-              </div>
-            </div>
-
-            <div className="pt-4 border-t space-y-4">
-              <h3 className="font-semibold flex items-center gap-2">
-                <GraduationCap className="w-5 h-5" />
-                Academic Performance
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-accent/50">
-                  <p className="text-sm text-muted-foreground mb-1">CGPA</p>
-                  <p className="text-2xl font-bold">8.45</p>
-                  <p className="text-xs text-muted-foreground mt-1">Out of 10.0</p>
-                </div>
-                <div className="p-4 rounded-lg bg-accent/50">
-                  <p className="text-sm text-muted-foreground mb-1">Credits Completed</p>
-                  <p className="text-2xl font-bold">145</p>
-                  <p className="text-xs text-muted-foreground mt-1">Out of 180</p>
-                </div>
-              </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Overall Attendance</span>
+                      <span className="font-semibold text-primary">
+                        {attendance.attendancePercentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress value={attendance.attendancePercentage} className="h-3" />
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">No attendance data available</p>
+              )}
             </div>
           </CardContent>
         </Card>
