@@ -7,7 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/student/Dashboard";
-import Attendance from "./pages/student/Attendance";
+import Attendance from "./pages/Attendance";
 import Profile from "./pages/student/Profile";
 import Notices from "./pages/student/Notices";
 import AdminDashboard from "./pages/admin/Dashboard";
