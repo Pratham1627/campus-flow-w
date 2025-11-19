@@ -34,6 +34,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       rollNo: userData.rollNo || '2021CS001',
       branch: userData.branch || 'Computer Science',
       semester: userData.semester || '6th',
+      username: userData.username,
+      password: userData.password,
     };
     setUser(newUser);
   };

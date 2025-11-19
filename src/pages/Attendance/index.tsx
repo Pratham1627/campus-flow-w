@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useAuth } from '@/contexts/AuthContext';
 import AttendanceLogin from '@/components/attendance/AttendanceLogin';
 import AttendanceDisplay from '@/components/attendance/AttendanceDisplay';
+import { Loader2 } from 'lucide-react';
 
 interface AttendanceSummary {
   total_classes: string;
@@ -16,9 +18,11 @@ interface AttendanceResponse {
 }
 
 const Attendance = () => {
+  const { user } = useAuth();
   const [attendanceData, setAttendanceData] = useState<AttendanceSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const handleLogin = async (username: string, password: string) => {
     setLoading(true);
@@ -84,10 +88,11 @@ const Attendance = () => {
     return 'Something went wrong. Please try again.';
   };
 
-  const handleFetchAgain = () => {
-    // Clear current data and show login form again
-    setAttendanceData(null);
-    setError(null);
+  const handleFetchAgain = async () => {
+    // Refetch using stored credentials
+    if (user?.username && user?.password) {
+      await handleLogin(user.username, user.password);
+    }
   };
 
   const handleLogout = () => {
@@ -96,9 +101,30 @@ const Attendance = () => {
     setError(null);
   };
 
+  // Auto-fetch attendance on component mount if credentials exist
+  useEffect(() => {
+    if (isInitialLoad && user?.username && user?.password) {
+      handleLogin(user.username, user.password);
+      setIsInitialLoad(false);
+    }
+  }, [user?.username, user?.password, isInitialLoad]);
+
   return (
     <div className="space-y-6">
-      {!attendanceData ? (
+      {loading && !attendanceData ? (
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
+            <p className="text-muted-foreground">Fetching your attendance data...</p>
+          </div>
+        </div>
+      ) : !attendanceData && !user?.username ? (
+        <AttendanceLogin
+          onSubmit={handleLogin}
+          loading={loading}
+          error={error}
+        />
+      ) : !attendanceData ? (
         <AttendanceLogin
           onSubmit={handleLogin}
           loading={loading}

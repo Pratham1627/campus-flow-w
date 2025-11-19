@@ -18,7 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [userType, setUserType] = useState<UserRole>(null);
+  const [userType, setUserType] = useState<UserRole>('student');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -35,6 +35,7 @@ const Login = () => {
       return;
     }
 
+    // Store credentials in AuthContext for attendance fetching
     login(userType, {
       name: username,
       email: `${username}@college.edu`,
@@ -64,7 +65,7 @@ const Login = () => {
             <GraduationCap className="w-10 h-10 text-white" />
           </div>
           <div>
-            <CardTitle className="text-3xl font-bold">College ERP</CardTitle>
+            <CardTitle className="text-3xl font-bold">EduDesk</CardTitle>
             <CardDescription className="text-base mt-2">
               Sign in to access your portal
             </CardDescription>

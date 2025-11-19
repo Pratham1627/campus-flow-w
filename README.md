@@ -1,22 +1,12 @@
-# Welcome to your Lovable project
+# EduDesk
 
-## Project info
+A comprehensive college management system with attendance tracking, student portal, and administrative tools.
 
-**URL**: https://lovable.dev/projects/3980dc1f-5531-48a5-b681-53b1a1822cb6
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/3980dc1f-5531-48a5-b681-53b1a1822cb6) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+## How to run this project
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Clone this repository and follow the setup instructions below.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +52,12 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/3980dc1f-5531-48a5-b681-53b1a1822cb6) and click on Share -> Publish.
+You can deploy this project to any hosting platform that supports Node.js applications, such as Vercel, Netlify, or your own server.
 
-## Can I connect a custom domain to my Lovable project?
+## Features
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Student Dashboard with attendance analytics
+- Admin Dashboard for management
+- Real-time attendance tracking
+- Notice board system
+- Profile management
