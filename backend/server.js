@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import { scrapeAttendance } from "./attendance.js";
+import { scrapeSubjectAttendance } from "./subjectAttendance.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,6 +23,21 @@ app.post("/api/attendance", async (req, res) => {
 
   try {
     const result = await scrapeAttendance(username, password);
+    return res.json(result);
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: "Server error" });
+  }
+});
+
+app.post("/api/subject-attendance", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ ok: false, error: "Missing credentials" });
+  }
+
+  try {
+    const result = await scrapeSubjectAttendance(username, password);
     return res.json(result);
   } catch (err) {
     return res.status(500).json({ ok: false, error: "Server error" });

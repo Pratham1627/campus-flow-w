@@ -9,11 +9,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { LogOut, Moon, Sun } from 'lucide-react';
+import { LogOut, Moon, Sun, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-const Navbar = () => {
+interface NavbarProps {
+  onToggleSidebar: () => void;
+  isSidebarCollapsed: boolean;
+}
+
+const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -46,13 +51,25 @@ const Navbar = () => {
 
   return (
     <nav className="h-16 border-b border-border bg-card neumorphic px-6 flex items-center justify-between sticky top-0 z-50">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">
-          Welcome back, {user?.name}!
-        </h2>
-        <p className="text-xs text-muted-foreground capitalize">
-          {user?.role} Portal
-        </p>
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onToggleSidebar}
+          className="rounded-lg"
+          title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <Menu className="w-5 h-5" />
+        </Button>
+        
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Welcome back, {user?.name}!
+          </h2>
+          <p className="text-xs text-muted-foreground capitalize">
+            {user?.role} Portal
+          </p>
+        </div>
       </div>
 
       <div className="flex items-center gap-4">

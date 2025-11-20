@@ -56,11 +56,11 @@ const Profile = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">New Delhi, India</span>
+                  <span className="text-muted-foreground">Bhopal, India</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Joined: Aug 2021</span>
+                  <span className="text-muted-foreground">Joined: Sept 2023</span>
                 </div>
               </div>
 

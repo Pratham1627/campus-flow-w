@@ -7,9 +7,10 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/student/Dashboard";
-import Attendance from "./pages/Attendance";
+import Attendance from "./pages/student/Attendance";
 import Profile from "./pages/student/Profile";
 import Notices from "./pages/student/Notices";
+import SubjectAttendance from "./pages/student/SubjectAttendance";
 import AdminDashboard from "./pages/admin/Dashboard";
 import NoticeUpload from "./pages/admin/NoticeUpload";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
               {/* Student Routes */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/attendance" element={<Attendance />} />
+              <Route path="/subject-attendance" element={<SubjectAttendance />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/notices" element={<Notices />} />
               

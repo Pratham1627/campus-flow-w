@@ -7,22 +7,13 @@ import {
   TrendingUp,
   TrendingDown,
   Target,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle,
+  Calendar
 } from 'lucide-react';
-import { subjectWiseAttendance } from '@/utils/dummyData';
 import { useAttendance } from '@/hooks/useAttendance';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Progress } from '@/components/ui/progress';
 
 const Attendance = () => {
   const { attendance, loading, error, refetch } = useAttendance();
@@ -33,15 +24,138 @@ const Attendance = () => {
     return 'hsl(var(--destructive))';
   };
 
+  // Calculate classes needed to reach a target percentage
+  const calculateRequiredClasses = (current: number, total: number, target: number) => {
+    // (current + x) / (total + x) = target/100
+    // (current + x) * 100 = target * (total + x)
+    // current * 100 + x * 100 = target * total + target * x
+    // x * 100 - target * x = target * total - current * 100
+    // x * (100 - target) = target * total - current * 100
+    // x = (target * total - current * 100) / (100 - target)
+    if (target >= 100) return 0;
+    const required = Math.ceil((target * total - current * 100) / (100 - target));
+    return Math.max(0, required);
+  };
+
+  // Calculate classes that can be missed to maintain target
+  const calculateMissableClasses = (current: number, total: number, target: number) => {
+    // (current / (total + x)) = target/100
+    // x = (current * 100 - target * total) / target
+    const missable = Math.floor((current * 100 - target * total) / target);
+    return Math.max(0, missable);
+  };
+
+  // Predict attendance if trend continues until Dec 7
+  const predictAttendance = (current: number, total: number) => {
+    const today = new Date();
+    const sessionEnd = new Date('2025-12-07');
+    const daysRemaining = Math.ceil((sessionEnd.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Classes per week: Mon(5), Tue(5), Wed(5+7=12), Thu(7), Fri(0), Sat(0), Sun(0) = 34 classes/week
+    // Actually: Mon(5), Tue(5), Wed(12), Thu(7) = 29 classes/week on 4 days
+    const weekdaySchedule = {
+      1: 5,  // Monday
+      2: 5,  // Tuesday
+      3: 12, // Wednesday
+      4: 7,  // Thursday
+      5: 0,  // Friday
+      6: 0,  // Saturday
+      0: 0   // Sunday
+    };
+
+    let predictedClasses = 0;
+    const currentDate = new Date(today);
+    
+    for (let i = 0; i < daysRemaining; i++) {
+      const dayOfWeek = currentDate.getDay();
+      predictedClasses += weekdaySchedule[dayOfWeek as keyof typeof weekdaySchedule] || 0;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    // Calculate current attendance rate
+    const currentRate = total > 0 ? current / total : 0;
+    const predictedPresent = Math.round(predictedClasses * currentRate);
+    const finalTotal = total + predictedClasses;
+    const finalPresent = current + predictedPresent;
+    const finalPercentage = finalTotal > 0 ? (finalPresent / finalTotal) * 100 : 0;
+
+    return {
+      daysRemaining,
+      predictedClasses,
+      predictedPresent,
+      finalTotal,
+      finalPresent,
+      finalPercentage
+    };
+  };
+
+  const currentPercentage = attendance?.attendancePercentage || 0;
+  const prediction = attendance ? predictAttendance(attendance.presentClasses, attendance.totalClasses) : null;
+  
+  // Smart calculation based on current attendance
+  let card60Data, card75Data;
+  
+  if (attendance) {
+    if (currentPercentage < 60) {
+      // Below 60%: Show classes needed to reach both 60% and 75%
+      card60Data = {
+        value: calculateRequiredClasses(attendance.presentClasses, attendance.totalClasses, 60),
+        label: 'To reach 60%',
+        sublabel: 'classes to attend',
+        color: 'red',
+        icon: TrendingUp
+      };
+      card75Data = {
+        value: calculateRequiredClasses(attendance.presentClasses, attendance.totalClasses, 75),
+        label: 'To reach 75%',
+        sublabel: 'classes to attend',
+        color: 'red',
+        icon: TrendingUp
+      };
+    } else if (currentPercentage >= 60 && currentPercentage < 75) {
+      // Between 60-75%: Show missable for 60%, needed for 75%
+      card60Data = {
+        value: calculateMissableClasses(attendance.presentClasses, attendance.totalClasses, 60),
+        label: 'Maintain 60%',
+        sublabel: 'classes can be missed',
+        color: 'green',
+        icon: TrendingDown
+      };
+      card75Data = {
+        value: calculateRequiredClasses(attendance.presentClasses, attendance.totalClasses, 75),
+        label: 'To reach 75%',
+        sublabel: 'classes to attend',
+        color: 'yellow',
+        icon: TrendingUp
+      };
+    } else {
+      // Above 75%: Show missable for both 75% and 60%
+      card60Data = {
+        value: calculateMissableClasses(attendance.presentClasses, attendance.totalClasses, 60),
+        label: 'Maintain 60%',
+        sublabel: 'classes can be missed',
+        color: 'green',
+        icon: TrendingDown
+      };
+      card75Data = {
+        value: calculateMissableClasses(attendance.presentClasses, attendance.totalClasses, 75),
+        label: 'Maintain 75%',
+        sublabel: 'classes can be missed',
+        color: 'blue',
+        icon: TrendingDown
+      };
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Attendance Analytics
+            Overall Attendance
           </h1>
           <p className="text-muted-foreground">
-            {loading ? 'Loading attendance data...' : error ? 'Using cached data' : 'Detailed view of your attendance records'}
+            {loading ? 'Loading attendance data...' : error ? 'Using cached data' : 'Detailed view of your overall attendance records'}
           </p>
         </div>
         {attendance && (
@@ -91,163 +205,169 @@ const Attendance = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="neumorphic">
-          <CardHeader>
-            <CardTitle>Attendance Gauge</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {loading ? (
-              <Skeleton className="h-40 w-full" />
-            ) : attendance ? (
-              <div className="relative pt-8">
-                <div className="text-center mb-4">
-                  <div className="text-5xl font-bold text-primary">
-                    {attendance.attendancePercentage.toFixed(1)}%
+      {/* Prediction & Analysis Cards */}
+      {!loading && attendance && card60Data && card75Data && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card className="neumorphic">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-primary" />
+                Attendance Strategy
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-lg border ${
+                  card60Data.color === 'red' 
+                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                    : card60Data.color === 'yellow'
+                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                    : 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <card60Data.icon className={`w-4 h-4 ${
+                      card60Data.color === 'red' 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : card60Data.color === 'yellow'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-green-600 dark:text-green-400'
+                    }`} />
+                    <p className={`text-sm font-medium ${
+                      card60Data.color === 'red' 
+                        ? 'text-red-700 dark:text-red-300' 
+                        : card60Data.color === 'yellow'
+                        ? 'text-yellow-700 dark:text-yellow-300'
+                        : 'text-green-700 dark:text-green-300'
+                    }`}>{card60Data.label}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">Current Attendance</p>
+                  <p className={`text-3xl font-bold ${
+                    card60Data.color === 'red' 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : card60Data.color === 'yellow'
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-green-600 dark:text-green-400'
+                  }`}>
+                    {card60Data.value}
+                  </p>
+                  <p className={`text-xs mt-1 ${
+                    card60Data.color === 'red' 
+                      ? 'text-red-600/70 dark:text-red-400/70' 
+                      : card60Data.color === 'yellow'
+                      ? 'text-yellow-600/70 dark:text-yellow-400/70'
+                      : 'text-green-600/70 dark:text-green-400/70'
+                  }`}>
+                    {card60Data.sublabel}
+                  </p>
                 </div>
-                <Progress 
-                  value={attendance.attendancePercentage} 
-                  className="h-3"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                  <span>0%</span>
-                  <span className="text-destructive">60%</span>
-                  <span className="text-primary">75%</span>
-                  <span>100%</span>
+
+                <div className={`p-4 rounded-lg border ${
+                  card75Data.color === 'red' 
+                    ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                    : card75Data.color === 'yellow'
+                    ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                    : 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <card75Data.icon className={`w-4 h-4 ${
+                      card75Data.color === 'red' 
+                        ? 'text-red-600 dark:text-red-400' 
+                        : card75Data.color === 'yellow'
+                        ? 'text-yellow-600 dark:text-yellow-400'
+                        : 'text-blue-600 dark:text-blue-400'
+                    }`} />
+                    <p className={`text-sm font-medium ${
+                      card75Data.color === 'red' 
+                        ? 'text-red-700 dark:text-red-300' 
+                        : card75Data.color === 'yellow'
+                        ? 'text-yellow-700 dark:text-yellow-300'
+                        : 'text-blue-700 dark:text-blue-300'
+                    }`}>{card75Data.label}</p>
+                  </div>
+                  <p className={`text-3xl font-bold ${
+                    card75Data.color === 'red' 
+                      ? 'text-red-600 dark:text-red-400' 
+                      : card75Data.color === 'yellow'
+                      ? 'text-yellow-600 dark:text-yellow-400'
+                      : 'text-blue-600 dark:text-blue-400'
+                  }`}>
+                    {card75Data.value}
+                  </p>
+                  <p className={`text-xs mt-1 ${
+                    card75Data.color === 'red' 
+                      ? 'text-red-600/70 dark:text-red-400/70' 
+                      : card75Data.color === 'yellow'
+                      ? 'text-yellow-600/70 dark:text-yellow-400/70'
+                      : 'text-blue-600/70 dark:text-blue-400/70'
+                  }`}>
+                    {card75Data.sublabel}
+                  </p>
                 </div>
               </div>
-            ) : (
-              <p className="text-center text-muted-foreground">No data available</p>
-            )}
-            
-            {loading ? (
-              <Skeleton className="h-40 w-full" />
-            ) : attendance ? (
-              <div className="space-y-4 pt-4 border-t">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-accent/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Need for 75%</p>
-                      <p className="text-xs text-muted-foreground">Attend more classes</p>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-primary">
-                    {attendance.requiredFor75}
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between p-4 rounded-lg bg-accent/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                      <TrendingDown className="w-5 h-5 text-green-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">Can skip until 60%</p>
-                      <p className="text-xs text-muted-foreground">Leaves available</p>
-                    </div>
-                  </div>
-                  <div className="text-2xl font-bold text-green-500">
-                    {attendance.allowedUntil60}
-                  </div>
-                </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Current Status:</strong> {currentPercentage.toFixed(1)}% attendance
+                  {currentPercentage < 60 && ' - Below minimum threshold'}
+                  {currentPercentage >= 60 && currentPercentage < 75 && ' - Above minimum, below target'}
+                  {currentPercentage >= 75 && ' - Above target, well done!'}
+                </p>
               </div>
-            ) : null}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="neumorphic">
-          <CardHeader>
-            <CardTitle>Subject-wise Attendance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={subjectWiseAttendance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="subject" 
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={10}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                  }}
-                />
-                <Bar dataKey="percentage" radius={[8, 8, 0, 0]}>
-                  {subjectWiseAttendance.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={getAttendanceColor(entry.percentage)} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="neumorphic">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                Attendance Prediction
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {prediction && (
+                <>
+                  <div className="p-4 rounded-lg bg-accent/50">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-sm text-muted-foreground">Predicted by Dec 7, 2025</p>
+                      <p className="text-sm font-medium">{prediction.daysRemaining} days left</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-4xl font-bold" style={{ color: getAttendanceColor(prediction.finalPercentage) }}>
+                        {prediction.finalPercentage.toFixed(1)}%
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Final Attendance</p>
+                    </div>
+                  </div>
 
-      <Card className="neumorphic">
-        <CardHeader>
-          <CardTitle>Detailed Subject-wise Breakdown</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead className="text-center">Present</TableHead>
-                <TableHead className="text-center">Total</TableHead>
-                <TableHead className="text-center">Percentage</TableHead>
-                <TableHead className="text-center">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subjectWiseAttendance.map((subject) => (
-                <TableRow key={subject.subject}>
-                  <TableCell className="font-medium">{subject.subject}</TableCell>
-                  <TableCell className="text-center">{subject.present}</TableCell>
-                  <TableCell className="text-center">{subject.total}</TableCell>
-                  <TableCell className="text-center">
-                    <span
-                      className="font-semibold"
-                      style={{ color: getAttendanceColor(subject.percentage) }}
-                    >
-                      {subject.percentage.toFixed(1)}%
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {subject.percentage >= 75 ? (
-                      <span className="text-primary flex items-center justify-center gap-1">
-                        <Target className="w-4 h-4" />
-                        Good
-                      </span>
-                    ) : subject.percentage >= 60 ? (
-                      <span className="text-yellow-600 flex items-center justify-center gap-1">
-                        <TrendingUp className="w-4 h-4" />
-                        Improve
-                      </span>
-                    ) : (
-                      <span className="text-destructive flex items-center justify-center gap-1">
-                        <XCircle className="w-4 h-4" />
-                        Low
-                      </span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-3 rounded-lg bg-accent/30">
+                      <p className="text-xs text-muted-foreground">Upcoming Classes</p>
+                      <p className="text-xl font-bold text-foreground">{prediction.predictedClasses}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-accent/30">
+                      <p className="text-xs text-muted-foreground">Expected Present</p>
+                      <p className="text-xl font-bold text-primary">{prediction.predictedPresent}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-accent/30">
+                      <p className="text-xs text-muted-foreground">Final Total</p>
+                      <p className="text-xl font-bold text-foreground">{prediction.finalTotal}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-accent/30">
+                      <p className="text-xs text-muted-foreground">Final Present</p>
+                      <p className="text-xl font-bold text-primary">{prediction.finalPresent}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t">
+                    <p className="text-xs text-muted-foreground">
+                      Based on schedule: Mon(5), Tue(5), Wed(12), Thu(7) classes per week. Prediction assumes current attendance rate continues.
+                    </p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
