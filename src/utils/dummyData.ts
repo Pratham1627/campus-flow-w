@@ -1,21 +1,4 @@
-export const attendanceData = {
-  totalClasses: 120,
-  presentClasses: 95,
-  absentClasses: 25,
-  attendancePercentage: 79.17,
-  requiredFor75: 5,
-  allowedUntil60: 15,
-};
-
-export const subjectWiseAttendance = [
-  { subject: 'Data Structures', present: 18, total: 22, percentage: 81.82 },
-  { subject: 'Computer Networks', present: 16, total: 20, percentage: 80.0 },
-  { subject: 'Database Systems', present: 19, total: 24, percentage: 79.17 },
-  { subject: 'Operating Systems', present: 17, total: 22, percentage: 77.27 },
-  { subject: 'Web Development', present: 14, total: 18, percentage: 77.78 },
-  { subject: 'Machine Learning', present: 11, total: 14, percentage: 78.57 },
-];
-
+// Data for weekly attendance chart
 export const weeklyAttendance = [
   { week: 'Week 1', attendance: 85 },
   { week: 'Week 2', attendance: 78 },
@@ -24,6 +7,16 @@ export const weeklyAttendance = [
   { week: 'Week 5', attendance: 80 },
   { week: 'Week 6', attendance: 79 },
 ];
+
+// Admin dashboard statistics
+export const adminStats = {
+  totalStudents: 2456,
+  totalNotices: 45,
+  activeSessions: 12,
+  departments: 8,
+  faculty: 156,
+  attendance: 82.5,
+};
 
 export const noticesData = [
   {
@@ -69,12 +62,3 @@ export const noticesData = [
     image: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&auto=format&fit=crop',
   },
 ];
-
-export const adminStats = {
-  totalStudents: 2456,
-  totalNotices: 45,
-  activeSessions: 12,
-  departments: 8,
-  faculty: 156,
-  attendance: 82.5,
-};

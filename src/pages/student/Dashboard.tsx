@@ -32,7 +32,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
@@ -82,12 +82,28 @@ const Dashboard = () => {
               trend={attendance.attendancePercentage >= 60 ? 'up' : 'down'}
               trendValue={attendance.attendancePercentage >= 60 ? 'Above target' : 'Below target'}
             />
-            <StatCard
-              title="Required for 60%"
-              value={attendance.requiredFor75}
-              icon={TrendingUp}
-              subtitle="More classes needed"
-            />
+            {attendance.attendancePercentage < 60 ? (
+              <StatCard
+                title="Required for 60%"
+                value={Math.max(0, Math.ceil((0.60 * attendance.totalClasses - attendance.presentClasses) / 0.40))}
+                icon={TrendingUp}
+                subtitle="More classes needed"
+              />
+            ) : attendance.attendancePercentage < 75 ? (
+              <StatCard
+                title="Required for 75%"
+                value={Math.max(0, Math.ceil((0.75 * attendance.totalClasses - attendance.presentClasses) / 0.25))}
+                icon={TrendingUp}
+                subtitle="More classes needed"
+              />
+            ) : (
+              <StatCard
+                title="Can Miss (75%)"
+                value={Math.max(0, Math.floor((attendance.presentClasses - 0.75 * attendance.totalClasses) / 0.75))}
+                icon={TrendingUp}
+                subtitle="Classes you can skip"
+              />
+            )}
           </>
         ) : (
           <div className="col-span-4 text-center text-muted-foreground">

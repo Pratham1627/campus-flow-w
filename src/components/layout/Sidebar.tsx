@@ -25,11 +25,19 @@ import {
 
 interface SidebarProps {
   isCollapsed: boolean;
+  isMobile?: boolean;
+  onNavigate?: () => void;
 }
 
-const Sidebar = ({ isCollapsed }: SidebarProps) => {
+const Sidebar = ({ isCollapsed, isMobile = false, onNavigate }: SidebarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleNavClick = () => {
+    if (onNavigate) {
+      onNavigate();
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -52,51 +60,52 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
   const links = user?.role === 'admin' ? adminLinks : studentLinks;
 
   return (
-    <aside className={`h-screen sticky top-0 bg-card border-r border-border neumorphic transition-all duration-300 flex flex-col ${
-      isCollapsed ? 'w-20' : 'w-64'
+    <aside className={`h-screen fixed top-0 left-0 bg-card border-r border-border neumorphic transition-all duration-300 flex flex-col overflow-hidden ${
+      isCollapsed ? 'w-16 sm:w-20' : 'w-56 sm:w-64'
     }`}>
-      <div className={`flex-1 flex flex-col p-6 ${isCollapsed ? 'px-3' : ''}`}>
-        <div className={`flex items-center mb-8 ${
-          isCollapsed ? 'justify-center flex-col gap-2' : 'gap-3'
+      <div className={`flex-1 flex flex-col p-3 sm:p-4 md:p-6 overflow-y-auto ${isCollapsed ? 'px-2 sm:px-3' : ''}`}>
+        <div className={`flex items-center mb-4 sm:mb-6 md:mb-8 ${
+          isCollapsed ? 'justify-center flex-col gap-1 sm:gap-2' : 'gap-2 sm:gap-3'
         }`}>
-          <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-6 h-6 text-white" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl gradient-primary flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="text-xl font-bold text-foreground">EduDesk</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground">EduDesk</h1>
               <p className="text-xs text-muted-foreground capitalize">{user?.role || 'Portal'}</p>
             </div>
           )}
         </div>
 
-        <nav className="space-y-2 flex-1">
+        <nav className="space-y-1 sm:space-y-2 flex-1">
           {links.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
+              onClick={handleNavClick}
               className={`flex items-center rounded-lg text-muted-foreground hover:text-foreground transition-smooth hover:bg-accent ${
-                isCollapsed ? 'justify-center px-3 py-3' : 'gap-3 px-4 py-3'
+                isCollapsed ? 'flex-col justify-center px-2 py-2 sm:py-3 gap-1' : 'gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3'
               }`}
               activeClassName="bg-accent text-accent-foreground font-medium shadow-sm"
-              title={isCollapsed ? link.label : undefined}
+              title={link.label}
             >
-              <link.icon className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>{link.label}</span>}
+              <link.icon className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              {!isCollapsed && <span className="text-sm sm:text-base">{link.label}</span>}
             </NavLink>
           ))}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="mt-auto space-y-2 pt-4 border-t border-border">
+        <div className="mt-auto space-y-1 sm:space-y-2 pt-3 sm:pt-4 border-t border-border">
           <Dialog>
             <DialogTrigger asChild>
               <Button
                 variant="outline"
-                className={`w-full ${isCollapsed ? 'px-3' : 'gap-2'} justify-center`}
+                className={`w-full ${isCollapsed ? 'px-2 sm:px-3' : 'gap-2'} justify-center text-xs sm:text-sm`}
                 title={isCollapsed ? 'Contact Us' : undefined}
               >
-                <Mail className="w-4 h-4 flex-shrink-0" />
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                 {!isCollapsed && <span>Contact Us</span>}
               </Button>
             </DialogTrigger>
@@ -139,10 +148,10 @@ const Sidebar = ({ isCollapsed }: SidebarProps) => {
           <Button
             variant="destructive"
             onClick={handleLogout}
-            className={`w-full ${isCollapsed ? 'px-3' : 'gap-2'} justify-center`}
+            className={`w-full ${isCollapsed ? 'px-2 sm:px-3' : 'gap-2'} justify-center text-xs sm:text-sm`}
             title={isCollapsed ? 'Logout' : undefined}
           >
-            <LogOut className="w-4 h-4 flex-shrink-0" />
+            <LogOut className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
             {!isCollapsed && <span>Logout</span>}
           </Button>
         </div>

@@ -64,60 +64,60 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
     .toUpperCase();
 
   return (
-    <nav className="h-16 border-b border-border bg-card neumorphic px-6 flex items-center justify-between sticky top-0 z-50">
-      <div className="flex items-center gap-4">
+    <nav className="h-14 sm:h-16 border-b border-border bg-card neumorphic px-3 sm:px-4 md:px-6 flex items-center justify-between sticky top-0 z-50">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleSidebar}
-          className="rounded-lg"
+          className="rounded-lg flex-shrink-0"
           title={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <Menu className="w-5 h-5" />
+          <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
         
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Welcome back, {user?.name}!
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm sm:text-base md:text-lg font-semibold text-foreground truncate">
+            {user?.name}
           </h2>
-          <p className="text-xs text-muted-foreground capitalize">
+          <p className="text-xs text-muted-foreground capitalize hidden sm:block">
             {user?.role} Portal
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={toggleTheme}
-          className="rounded-full"
+          className="rounded-full h-8 w-8 sm:h-10 sm:w-10"
         >
           {theme === 'light' ? (
-            <Moon className="w-5 h-5" />
+            <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
-            <Sun className="w-5 h-5" />
+            <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
           )}
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar>
+            <Button variant="ghost" className="relative h-8 w-8 sm:h-10 sm:w-10 rounded-full p-0">
+              <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                 {profilePhotoUrl && (
                   <AvatarImage src={profilePhotoUrl} alt={user?.name} />
                 )}
-                <AvatarFallback className="gradient-primary text-white font-semibold">
+                <AvatarFallback className="gradient-primary text-white font-semibold text-xs sm:text-sm">
                   {initials}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56 bg-popover" align="end">
+          <DropdownMenuContent className="w-48 sm:w-56 bg-popover" align="end">
             <DropdownMenuLabel>
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs sm:text-sm font-medium truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 <p className="text-xs text-primary capitalize font-medium">
                   {user?.role}
                 </p>
@@ -125,8 +125,8 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive">
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>Log out</span>
+              <LogOut className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm">Log out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

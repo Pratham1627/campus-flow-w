@@ -15,14 +15,22 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import NoticeUpload from "./pages/admin/NoticeUpload";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // Data stays fresh for 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
+        <div className="w-full max-w-full overflow-x-hidden">
+          <Toaster />
+          <Sonner />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -42,6 +50,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </div>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>

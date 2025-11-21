@@ -65,7 +65,7 @@ const SubjectAttendancePage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden">
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">
           Subject-wise Attendance
@@ -93,14 +93,14 @@ const SubjectAttendancePage = () => {
           {subjects.map((subject, index) => (
             <Card key={index} className="neumorphic hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
                   {/* Icon */}
                   <div className="flex-shrink-0">
                     {getAttendanceIcon(subject.attendancePercentage)}
                   </div>
 
                   {/* Subject Name and Progress */}
-                  <div className="flex-1 min-w-0 space-y-2">
+                  <div className="flex-1 min-w-0 space-y-2 w-full">
                     <div>
                       <h3 className="font-semibold text-base truncate">
                         {subject.subjectName}
@@ -111,25 +111,25 @@ const SubjectAttendancePage = () => {
                     </div>
                     <Progress 
                       value={subject.attendancePercentage} 
-                      className="h-2"
+                      className="h-2 w-full"
                     />
                   </div>
 
                   {/* Stats */}
-                  <div className="flex gap-4 text-center flex-shrink-0">
+                  <div className="flex gap-3 sm:gap-4 text-center flex-shrink-0 w-full sm:w-auto justify-around sm:justify-start">
                     <div>
                       <p className="text-xs text-muted-foreground">Total</p>
-                      <p className="text-base font-bold">{subject.classesHeld}</p>
+                      <p className="text-sm sm:text-base font-bold">{subject.classesHeld}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Present</p>
-                      <p className="text-base font-bold text-green-600 dark:text-green-400">
+                      <p className="text-sm sm:text-base font-bold text-green-600 dark:text-green-400">
                         {subject.classesAttended}
                       </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Absent</p>
-                      <p className="text-base font-bold text-red-600 dark:text-red-400">
+                      <p className="text-sm sm:text-base font-bold text-red-600 dark:text-red-400">
                         {subject.classesAbsent}
                       </p>
                     </div>
