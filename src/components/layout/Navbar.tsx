@@ -8,10 +8,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LogOut, Moon, Sun, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { fetchProfileData } from '@/services/attendanceService';
 
 interface NavbarProps {
   onToggleSidebar: () => void;
@@ -22,6 +23,7 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string>('');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
@@ -30,6 +32,18 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     }
   }, []);
+
+  useEffect(() => {
+    const loadProfilePhoto = async () => {
+      if (user?.username && user?.password) {
+        const result = await fetchProfileData(user.username, user.password);
+        if (result.ok && result.profile?.photoUrl) {
+          setProfilePhotoUrl(result.profile.photoUrl);
+        }
+      }
+    };
+    loadProfilePhoto();
+  }, [user?.username, user?.password]);
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -90,6 +104,9 @@ const Navbar = ({ onToggleSidebar, isSidebarCollapsed }: NavbarProps) => {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar>
+                {profilePhotoUrl && (
+                  <AvatarImage src={profilePhotoUrl} alt={user?.name} />
+                )}
                 <AvatarFallback className="gradient-primary text-white font-semibold">
                   {initials}
                 </AvatarFallback>

@@ -16,10 +16,27 @@ export interface ProfileData {
   scholarNo: string;
   branch: string;
   semester: string;
+  section: string;
   dob: string;
   gender: string;
   email: string;
   mobile: string;
+  category?: string;
+  bloodGroup?: string;
+  aadharNo?: string;
+  fatherName?: string;
+  fatherMobile?: string;
+  motherName?: string;
+  motherMobile?: string;
+  school10Name?: string;
+  board10?: string;
+  year10?: string;
+  percentage10?: string;
+  school12Name?: string;
+  board12?: string;
+  year12?: string;
+  percentage12?: string;
+  photoUrl?: string;
 }
 
 export interface AttendanceResponse {
@@ -93,6 +110,57 @@ export async function fetchRealAttendance(
     return { 
       ok: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch attendance' 
+    };
+  }
+}
+
+export interface ProfileResponse {
+  ok: boolean;
+  profile?: ProfileData;
+  error?: string;
+}
+
+export async function fetchProfileData(
+  username: string,
+  password: string
+): Promise<ProfileResponse> {
+  try {
+    const response = await axios.post('/api/profile', {
+      username,
+      password,
+    });
+
+    console.log('Profile API response:', response.data);
+
+    if (response.data.ok && response.data.profile) {
+      return {
+        ok: true,
+        profile: response.data.profile,
+      };
+    } else {
+      return {
+        ok: false,
+        error: response.data.error || 'Failed to fetch profile',
+      };
+    }
+  } catch (error) {
+    console.error('Error fetching profile:', error);
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        return {
+          ok: false,
+          error: error.response.data?.error || 'Server error occurred',
+        };
+      } else if (error.request) {
+        return {
+          ok: false,
+          error: 'Unable to connect to server. Please ensure the backend is running.',
+        };
+      }
+    }
+    return { 
+      ok: false, 
+      error: error instanceof Error ? error.message : 'Failed to fetch profile' 
     };
   }
 }

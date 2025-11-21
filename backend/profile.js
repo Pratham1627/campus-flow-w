@@ -1,28 +1,27 @@
-// api/profile.js - Vercel Serverless Function
+// backend/profile.js
 import axios from "axios";
 import * as cheerio from "cheerio";
 
+const BASE_URL = "https://portal.lnct.ac.in/";
+const LOGIN_URL = BASE_URL + "Accsoft2/StudentLogin.aspx";
+const PARENT_DESK_URL = BASE_URL + "Accsoft2/Parents/ParentDesk1.aspx";
+const PROFILE_PRINT_URL = BASE_URL + "Accsoft2/Parents/StudentProfilePrint.aspx";
+
+const headers = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.5",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Connection": "keep-alive",
+  "Upgrade-Insecure-Requests": "1",
+};
+
 /**
  * scrapeProfile(username, password)
- * - Scrapes comprehensive profile data from StudentProfilePrint.aspx
- * - returns { ok: true, profile: { ... } }
- * - or { ok: false, error: "..." }
+ * Scrapes student profile data from StudentProfilePrint.aspx
+ * Returns comprehensive profile information including personal, academic, and parent details
  */
-async function scrapeProfile(username, password) {
-  const BASE_URL = "https://portal.lnct.ac.in/";
-  const LOGIN_URL = BASE_URL + "Accsoft2/StudentLogin.aspx";
-  const PARENT_DESK_URL = BASE_URL + "Accsoft2/Parents/ParentDesk1.aspx";
-  const PROFILE_PRINT_URL = BASE_URL + "Accsoft2/Parents/StudentProfilePrint.aspx";
-
-  const headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.5",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-  };
-
+export async function scrapeProfile(username, password) {
   try {
     // Step 1: Fetch login page to get tokens
     const loginPage = await axios.get(LOGIN_URL, { headers });
@@ -33,7 +32,7 @@ async function scrapeProfile(username, password) {
     const eventValidation = $("#__EVENTVALIDATION").val() || "";
     const viewGen = $("#__VIEWSTATEGENERATOR").val() || "";
 
-    // Step 2: Perform ScriptManager AJAX login
+    // Step 2: Perform ScriptManager AJAX login (same as attendance.js)
     const form = new URLSearchParams({
       "ctl00$ScriptManager1": "ctl00$cph1$UpdatePanel5|ctl00$cph1$btnStuLogin",
       "__EVENTTARGET": "",
@@ -73,14 +72,16 @@ async function scrapeProfile(username, password) {
       headers: { ...headers, Cookie: combinedCookies.join("; ") },
     });
 
-    // Step 5: Fetch profile print page (contains all data in span elements)
+    // Step 5: Fetch profile print page
+    // Note: This page may have a warning dialog, but since we're scraping HTML
+    // the dialog won't prevent us from getting the data
     const profileRes = await axios.get(PROFILE_PRINT_URL, {
       headers: { ...headers, Cookie: combinedCookies.join("; ") },
     });
 
     const $profile = cheerio.load(profileRes.data);
 
-    // Extract student information from span elements (not input fields)
+    // Extract student information from span elements
     const profile = {
       // Basic Information
       name: $profile("#lblName").text().trim() || "",
@@ -100,26 +101,82 @@ async function scrapeProfile(username, password) {
       category: $profile("#lblCategory").text().trim() || "",
       mobile: $profile("#lblStudentMobile").text().trim() || "",
       bloodGroup: $profile("#lblBlood").text().trim() || "",
+      birthPlace: $profile("#lblBirthPlace").text().trim() || "",
+      motherTongue: $profile("#lblMotherTongue").text().trim() || "",
+      nationality: $profile("#lblNationality").text().trim() || "",
+      religion: $profile("#lblreligion").text().trim() || "",
+      samagraId: $profile("#lblSamagra").text().trim() || "",
+      maritalStatus: $profile("#lblMaritalStatus").text().trim() || "",
+      aadharMobile: $profile("#lblAadharMob").text().trim() || "",
+      abcId: $profile("#lblAbcID").text().trim() || "",
       
       // Parent Information
       fatherName: $profile("#lblFName").text().trim() || "",
+      fatherOccupation: $profile("#lblOccupationF").text().trim() || "",
       fatherMobile: $profile("#lblFMobile").text().trim() || "",
       motherName: $profile("#lblMName").text().trim() || "",
+      motherOccupation: $profile("#lblOccupationM").text().trim() || "",
       motherMobile: $profile("#lblMMobNo").text().trim() || "",
+      
+      // Address Information
+      permanentAddress: $profile("#lblAddress").text().trim() || "",
+      permanentCity: $profile("#lblPCity").text().trim() || "",
+      permanentState: $profile("#lblState").text().trim() || "",
+      permanentPin: $profile("#lblPinNo").text().trim() || "",
+      permanentPhone: $profile("#lblPPhone").text().trim() || "",
+      localAddress: $profile("#lblLAddress").text().trim() || "",
+      localCity: $profile("#lblLCity").text().trim() || "",
+      localState: $profile("#lblLState").text().trim() || "",
       
       // 10th Details
       school10Name: $profile("#lblSchoolName").text().trim() || "",
       board10: $profile("#lbl10thBoard").text().trim() || "",
       year10: $profile("#lbl0thYear").text().trim() || "",
+      roll10: $profile("#lbl10thRoll").text().trim() || "",
+      obtain10: $profile("#lb10thObtain").text().trim() || "",
+      total10: $profile("#lbl10thTotal").text().trim() || "",
       percentage10: $profile("#lbl10thPer").text().trim() || "",
+      resultStatus10: $profile("#lblResultStatus").text().trim() || "",
       
       // 12th Details
       school12Name: $profile("#lbl12thSchoolName").text().trim() || "",
       board12: $profile("#lbl12thBoard").text().trim() || "",
       year12: $profile("#lbl12thYear").text().trim() || "",
+      roll12: $profile("#lbl12thRoll").text().trim() || "",
+      obtain12: $profile("#lbl12thObtain").text().trim() || "",
+      total12: $profile("#lbl12thTotal").text().trim() || "",
       percentage12: $profile("#lbl12thPer").text().trim() || "",
+      stream12: $profile("#lblStreamSubj").text().trim() || "",
+      resultStatus12: $profile("#lbl12ResultStatus").text().trim() || "",
       
-      // Photo URL
+      // Graduation Details
+      collegeName: $profile("#lblCollegeName").text().trim() || "",
+      university: $profile("#lblUniversity").text().trim() || "",
+      graduationYear: $profile("#lblYear").text().trim() || "",
+      graduationRoll: $profile("#lblRollC").text().trim() || "",
+      graduationObtain: $profile("#lblObtainC").text().trim() || "",
+      graduationTotal: $profile("#lblTotalMarksC").text().trim() || "",
+      graduationCGPA: $profile("#lblCGPA").text().trim() || "",
+      graduationRank: $profile("#lblRankGradDivRes").text().trim() || "",
+      graduationStream: $profile("#lblCourStreamGradu").text().trim() || "",
+      
+      // Diploma Details
+      diplomaCollegeName: $profile("#lblDiplomaCollegeName").text().trim() || "",
+      diplomaUniversity: $profile("#lblDiplomaUniversity").text().trim() || "",
+      diplomaYear: $profile("#lblDiplomaYear").text().trim() || "",
+      diplomaRoll: $profile("#lblDiplomaRoll").text().trim() || "",
+      diplomaObtain: $profile("#lblDiplomaObtain").text().trim() || "",
+      diplomaTotal: $profile("#lblDiplomaTotal").text().trim() || "",
+      diplomaCGPA: $profile("#lblDiplomaCGPA").text().trim() || "",
+      
+      // Qualified Exam Details
+      qualifiedExamName: $profile("#lblQlfdExamName").text().trim() || "",
+      qualifiedExamRoll: $profile("#lblQlfdExamRollNo").text().trim() || "",
+      qualifiedExamRank: $profile("#lblQlfdExamRank").text().trim() || "",
+      qualifiedExamQuota: $profile("#lblQlfdExamQuota").text().trim() || "",
+      qualifiedExamMarks: $profile("#lblQlfdExamMarks").text().trim() || "",
+      
+      // Photo URL (from img src)
       photoUrl: $profile("#imgphoto").attr("src") || "",
     };
 
@@ -148,48 +205,20 @@ async function scrapeProfile(username, password) {
       return { ok: false, error: "No profile data found" };
     }
 
+    console.log("[DEBUG] Profile scraped successfully:", {
+      name: profile.name,
+      enrollment: profile.enrollmentNo,
+      branch: profile.branch,
+      semester: profile.semester
+    });
+
     return {
       ok: true,
       profile,
     };
   } catch (err) {
     const message = err && err.message ? err.message : "Unknown scraper error";
+    console.error("[ERROR] Profile scraper error:", message);
     return { ok: false, error: "Scraper error: " + message };
-  }
-}
-
-// Vercel Serverless Function Handler
-export default async function handler(req, res) {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Credentials', true);
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  // Handle OPTIONS request for CORS preflight
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ ok: false, error: 'Method not allowed' });
-  }
-
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({ ok: false, error: "Missing credentials" });
-  }
-
-  try {
-    const result = await scrapeProfile(username, password);
-    return res.status(200).json(result);
-  } catch (err) {
-    return res.status(500).json({ ok: false, error: "Server error" });
   }
 }
